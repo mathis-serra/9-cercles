@@ -13,7 +13,7 @@ private:
     bool is_connected_;
 
 public:
-    // Forme canonique de Coplien
+    
     Client();
     Client(const std::string& server_ip, int server_port);
     Client(const Client& other);
