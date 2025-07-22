@@ -14,7 +14,7 @@ SOURCES = main.cpp \
           $(CLIENTDIR)/Client.cpp
 
 # Objects
-OBJECTS = $(SOURCES:.cpp=.o)
+OBJECTS = $(SOURCES:.cpp=$(OBJDIR)/%.o)
 
 # Headers
 HEADERS = $(SERVERDIR)/LPTF_socket.hpp \
@@ -28,8 +28,10 @@ $(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 # Compilation des fichiers objets
-%.o: %.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJDIR)/%.o: %.cpp $(HEADERS)
+    @mkdir -p $(dir $@)
+    $(CXX) $(CXXFLAGS) -c $< -o $@
+
 
 # Nettoyage
 clean:
