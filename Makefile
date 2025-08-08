@@ -1,20 +1,25 @@
 CXX = clang++
-CXXFLAGS = -std=c++14 -Wall -Wextra -g
+CXXFLAGS = -std=c++17 -Wall -Wextra -g
 TARGET = main
 SRCDIR = .
 SERVERDIR = server
 CLIENTDIR = client
+PROTOCOLDIR = protocole
 
 SOURCES = main.cpp \
           $(SERVERDIR)/LPTF_socket.cpp \
           $(SERVERDIR)/Server.cpp \
-          $(CLIENTDIR)/Client.cpp
+          $(CLIENTDIR)/Client.cpp \
+          $(CLIENTDIR)/RemoteControl.cpp \
+          $(PROTOCOLDIR)/LPTF_Protocol.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 
 HEADERS = $(SERVERDIR)/LPTF_socket.hpp \
           $(SERVERDIR)/Server.hpp \
-          $(CLIENTDIR)/Client.hpp
+          $(CLIENTDIR)/Client.hpp \
+          $(CLIENTDIR)/RemoteControl.hpp \
+          $(PROTOCOLDIR)/LPTF_Protocol.hpp
 
 all: $(TARGET)
 
@@ -25,7 +30,7 @@ $(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJECTS) $(TARGET) $(TARGET).dSYM *.o server/*.o client/*.o
+	rm -f $(OBJECTS) $(TARGET) $(TARGET).dSYM *.o server/*.o client/*.o protocole/*.o
 
 fclean: clean
 	rm -rf $(TARGET).dSYM/ test_server.dSYM/ test_client.dSYM/

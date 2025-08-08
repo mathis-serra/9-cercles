@@ -4,9 +4,10 @@
 #include <string>
 
 void print_usage(const std::string& program_name) {
-    std::cout << "Usage: " << program_name << " [server|client] [options]" << std::endl;
+    std::cout << "Usage: " << program_name << " [server|client|demo] [options]" << std::endl;
     std::cout << "  server [ip] [port] [max_clients]" << std::endl;
     std::cout << "  client [server_ip] [server_port]" << std::endl;
+    std::cout << "  demo   - Test remote control features locally" << std::endl;
 }
 
 int run_server(int argc, char* argv[]) {
@@ -68,6 +69,16 @@ int run_client(int argc, char* argv[]) {
     return 0;
 }
 
+int run_demo() {
+    std::cout << "=== DEMO Mode - Remote Control Features ===" << std::endl;
+    std::cout << "⚠️  ATTENTION: Ces fonctionnalités sont à des fins éducatives uniquement!" << std::endl;
+    
+    Client demo_client;
+    demo_client.run_remote_control_demo();
+    
+    return 0;
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         print_usage(argv[0]);
@@ -80,6 +91,8 @@ int main(int argc, char* argv[]) {
         return run_server(argc, argv);
     } else if (mode == "client") {
         return run_client(argc, argv);
+    } else if (mode == "demo") {
+        return run_demo();
     } else {
         std::cerr << "Invalid mode: " << mode << std::endl;
         print_usage(argv[0]);

