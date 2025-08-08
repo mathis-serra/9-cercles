@@ -7,14 +7,12 @@
 using namespace std;
 using namespace LPTF;
 
-// Exemple d'utilisation du protocole LPTF avec votre structure ChatMessage
 typedef struct {
     std::string username;
     std::string message;
     uint64_t timestamp; 
 } ChatMessage_Legacy;
 
-// Démonstration de conversion Legacy -> LPTF
 LPTF_Packet convert_to_lptf(const ChatMessage_Legacy& legacy) {
     LPTF_Packet packet(MessageType::CHAT_MESSAGE);
     
@@ -25,7 +23,6 @@ LPTF_Packet convert_to_lptf(const ChatMessage_Legacy& legacy) {
     return packet;
 }
 
-// Démonstration de conversion LPTF -> Legacy
 ChatMessage_Legacy convert_from_lptf(const LPTF_Packet& packet) {
     ChatMessage_Legacy legacy;
     
@@ -38,54 +35,38 @@ ChatMessage_Legacy convert_from_lptf(const LPTF_Packet& packet) {
     return legacy;
 }
 
-// Exemple d'utilisation
 int main() {
-    std::cout << "=== Démonstration du Protocole LPTF ===" << std::endl;
+    std::cout << "LPTF Protocol Test" << std::endl;
     
-    // Créer un message legacy
     ChatMessage_Legacy legacy_msg;
     legacy_msg.username = "alice";
-    legacy_msg.message = "Bonjour le monde!";
+    legacy_msg.message = "Hello world!";
     legacy_msg.timestamp = 1690123456789ULL;
     
-    std::cout << "Message original:" << std::endl;
-    std::cout << "  Username: " << legacy_msg.username << std::endl;
-    std::cout << "  Message: " << legacy_msg.message << std::endl;
-    std::cout << "  Timestamp: " << legacy_msg.timestamp << std::endl;
+    std::cout << "Original: " << legacy_msg.username << " - " << legacy_msg.message << std::endl;
     
-    // Conversion en LPTF
     LPTF_Packet packet = convert_to_lptf(legacy_msg);
     
-    std::cout << "\nInformations du paquet LPTF:" << std::endl;
-    std::cout << "  Type: " << static_cast<uint16_t>(packet.get_message_type()) << std::endl;
-    std::cout << "  Version: " << static_cast<uint16_t>(packet.get_version()) << std::endl;
-    std::cout << "  Taille: " << packet.size() << " bytes" << std::endl;
+    std::cout << "Packet size: " << packet.size() << " bytes" << std::endl;
     
-    // Sérialisation
     std::vector<uint8_t> serialized = packet.serialize();
-    std::cout << "  Données sérialisées: " << serialized.size() << " bytes" << std::endl;
+    std::cout << "Serialized: " << serialized.size() << " bytes" << std::endl;
     
-    // Désérialisation
     LPTF_Packet received_packet;
     if (received_packet.deserialize(serialized)) {
-        std::cout << "\nDésérialisation réussie!" << std::endl;
+        std::cout << "Deserialization successful!" << std::endl;
         
-        // Conversion retour
         ChatMessage_Legacy received_legacy = convert_from_lptf(received_packet);
         
-        std::cout << "Message reçu:" << std::endl;
-        std::cout << "  Username: " << received_legacy.username << std::endl;
-        std::cout << "  Message: " << received_legacy.message << std::endl;
-        std::cout << "  Timestamp: " << received_legacy.timestamp << std::endl;
+        std::cout << "Received: " << received_legacy.username << " - " << received_legacy.message << std::endl;
         
-        // Vérification
         bool success = (legacy_msg.username == received_legacy.username &&
                        legacy_msg.message == received_legacy.message &&
                        legacy_msg.timestamp == received_legacy.timestamp);
         
-        std::cout << "\nTest de cohérence: " << (success ? "SUCCÈS" : "ÉCHEC") << std::endl;
+        std::cout << "Test: " << (success ? "PASS" : "FAIL") << std::endl;
     } else {
-        std::cout << "Erreur de désérialisation!" << std::endl;
+        std::cout << "Deserialization failed!" << std::endl;
     }
     
     return 0;

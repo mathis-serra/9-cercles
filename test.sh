@@ -20,7 +20,7 @@ echo "1. Démarrage du serveur en arrière-plan..."
 SERVER_PID=$!
 echo "Serveur démarré (PID: $SERVER_PID)"
 
-# Attendre que le serveur démarre
+
 sleep 2
 
 echo

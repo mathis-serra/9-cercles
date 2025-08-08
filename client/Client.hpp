@@ -13,32 +13,26 @@ private:
     bool is_connected_;
 
 public:
-    
     Client();
     Client(const std::string& server_ip, int server_port);
     Client(const Client& other);
     Client& operator=(const Client& other);
     ~Client();
     
-    // Constructeur et opérateur de move
     Client(Client&& other) noexcept;
     Client& operator=(Client&& other) noexcept;
     
-    // Méthodes principales
     bool connect_to_server();
     bool send_message(const std::string& message);
     bool receive_message(std::string& message);
     void disconnect();
     
-    // Getters (const)
     const std::string& get_server_ip() const;
     int get_server_port() const;
     bool get_is_connected() const;
     
-    // Setters
     void set_server_info(const std::string& ip, int port);
     
-    // Méthode pour exécuter le client en mode interactif
     void run_interactive();
 
 private:

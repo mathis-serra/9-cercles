@@ -8,9 +8,6 @@
 #include <map>
 #include <variant>
 
-// LPTF Protocol - La Plateforme Transport Format
-// Version 1.0 - Protocole binaire évolutif pour les 9 cercles
-
 namespace LPTF {
 
 // Types de données supportés

@@ -6,9 +6,6 @@
 
 namespace LPTF {
 
-// ============================================================================
-// ByteOrder Implementation
-// ============================================================================
 
 bool ByteOrder::is_big_endian() {
     uint16_t test = 0x0102;
@@ -45,9 +42,6 @@ uint16_t ByteOrder::ntoh16(uint16_t value) { return hton16(value); }
 uint32_t ByteOrder::ntoh32(uint32_t value) { return hton32(value); }
 uint64_t ByteOrder::ntoh64(uint64_t value) { return hton64(value); }
 
-// ============================================================================
-// LPTF_Packet Implementation
-// ============================================================================
 
 LPTF_Packet::LPTF_Packet() {
     header_.magic = 0x4C505446;
@@ -73,7 +67,7 @@ LPTF_Packet& LPTF_Packet::operator=(const LPTF_Packet& other) {
 }
 
 LPTF_Packet::~LPTF_Packet() {
-    // Destructeur par défaut suffit avec smart pointers et containers STL
+   
 }
 
 LPTF_Packet::LPTF_Packet(LPTF_Packet&& other) noexcept {
@@ -236,26 +230,26 @@ size_t LPTF_Packet::get_serialized_size(const DataValue& value) const {
 std::vector<uint8_t> LPTF_Packet::serialize() const {
     std::vector<uint8_t> buffer;
     
-    // Calculer la taille du payload
+    
     size_t payload_size = 0;
     for (const auto& field : fields_) {
-        payload_size += 1; // name length
-        payload_size += field.first.length(); // name
-        payload_size += 1; // data type
-        payload_size += 2; // data length
-        payload_size += get_serialized_size(field.second); // data
+        payload_size += 1; 
+        payload_size += field.first.length(); 
+        payload_size += 1; 
+        payload_size += 2; 
+        payload_size += get_serialized_size(field.second); 
     }
     
-    // Mettre à jour le header
+    
     const_cast<LPTF_Packet*>(this)->header_.payload_length = static_cast<uint32_t>(payload_size);
     
-    // Réserver l'espace
+    
     buffer.reserve(sizeof(PacketHeader) + payload_size);
     
-    // Sérialiser le header
+    
     serialize_header(buffer);
     
-    // Sérialiser chaque field
+    
     for (const auto& field : fields_) {
         serialize_field(field.first, field.second, buffer);
     }
@@ -264,44 +258,44 @@ std::vector<uint8_t> LPTF_Packet::serialize() const {
 }
 
 void LPTF_Packet::serialize_header(std::vector<uint8_t>& buffer) const {
-    // Magic number (4 bytes)
+   
     uint32_t magic = ByteOrder::hton32(header_.magic);
     const uint8_t* magic_bytes = reinterpret_cast<const uint8_t*>(&magic);
     buffer.insert(buffer.end(), magic_bytes, magic_bytes + 4);
     
-    // Version (1 byte)
+   
     buffer.push_back(header_.version);
     
-    // Flags (1 byte)
+    
     buffer.push_back(header_.flags);
     
-    // Message type (2 bytes)
+    
     uint16_t msg_type = ByteOrder::hton16(header_.message_type);
     const uint8_t* type_bytes = reinterpret_cast<const uint8_t*>(&msg_type);
     buffer.insert(buffer.end(), type_bytes, type_bytes + 2);
     
-    // Payload length (4 bytes)
+   
     uint32_t payload_len = ByteOrder::hton32(header_.payload_length);
     const uint8_t* len_bytes = reinterpret_cast<const uint8_t*>(&payload_len);
     buffer.insert(buffer.end(), len_bytes, len_bytes + 4);
 }
 
 void LPTF_Packet::serialize_field(const std::string& name, const DataValue& value, std::vector<uint8_t>& buffer) const {
-    // Name length
+   
     buffer.push_back(static_cast<uint8_t>(name.length()));
     
-    // Name
+    
     buffer.insert(buffer.end(), name.begin(), name.end());
     
-    // Data type
+  
     buffer.push_back(static_cast<uint8_t>(get_data_type(value)));
     
-    // Data length
+  
     uint16_t data_len = ByteOrder::hton16(static_cast<uint16_t>(get_serialized_size(value)));
     const uint8_t* len_bytes = reinterpret_cast<const uint8_t*>(&data_len);
     buffer.insert(buffer.end(), len_bytes, len_bytes + 2);
     
-    // Data value
+   
     std::visit([&buffer](const auto& v) {
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, std::string>) {

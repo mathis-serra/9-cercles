@@ -2,7 +2,6 @@
 #include "LPTF_Protocol.hpp"
 #include <iostream>
 
-// Exemple d'intégration du protocole LPTF avec votre socket
 class LPTF_Server {
 private:
     std::unique_ptr<LPTF_Socket> server_socket_;
@@ -18,25 +17,23 @@ public:
         if (!server_socket_->bind_socket()) return false;
         if (!server_socket_->listen_socket()) return false;
         
-        std::cout << "Serveur LPTF démarré avec protocole binaire" << std::endl;
-        std::cout << "Protocole: " << LPTF::LPTF_Packet::get_protocol_info() << std::endl;
+        std::cout << "LPTF Server started" << std::endl;
+        std::cout << "Protocol: " << LPTF::LPTF_Packet::get_protocol_info() << std::endl;
         
         return true;
     }
     
-    // Envoyer un paquet LPTF via socket
     bool send_packet(LPTF_Socket& socket, const LPTF::LPTF_Packet& packet) {
         try {
             std::vector<uint8_t> data = packet.serialize();
             std::string str_data(data.begin(), data.end());
             return socket.send_data(str_data) > 0;
-        } catch (const LPTF::ProtocolException& e) {
-            std::cerr << "Erreur protocole: " << e.what() << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "Protocol error: " << e.what() << std::endl;
             return false;
         }
     }
     
-    // Recevoir un paquet LPTF via socket
     bool receive_packet(LPTF_Socket& socket, LPTF::LPTF_Packet& packet) {
         std::string str_data;
         ssize_t received = socket.receive_data(str_data);
@@ -47,7 +44,6 @@ public:
         return packet.deserialize(data);
     }
     
-    // Diffuser un message chat à tous les clients
     void broadcast_chat(const std::string& username, const std::string& message, uint64_t timestamp) {
         LPTF::LPTF_Packet packet = LPTF::ChatMessage::create(username, message, timestamp);
         
@@ -58,7 +54,6 @@ public:
         }
     }
     
-    // Envoyer information sur le protocole
     void send_protocol_info(LPTF_Socket& client) {
         LPTF::LPTF_Packet packet(LPTF::MessageType::PROTOCOL_INFO);
         packet.set_uint8("version", 1);
@@ -73,7 +68,6 @@ public:
             static_cast<uint16_t>(LPTF::MessageType::PONG)
         };
         
-        // Convertir en binary data
         std::vector<uint8_t> types_data;
         for (uint16_t type : supported_types) {
             types_data.push_back((type >> 8) & 0xFF);
@@ -85,41 +79,33 @@ public:
     }
 };
 
-// Exemple d'utilisation
 int main() {
-    std::cout << "=== Exemple d'Intégration LPTF avec Socket ===" << std::endl;
+    std::cout << "LPTF Integration Example" << std::endl;
     
-    // Créer différents types de paquets
-    
-    // 1. Message de chat
     LPTF::LPTF_Packet chat_packet = LPTF::ChatMessage::create("bob", "Hello LPTF!", 1690123456789ULL);
-    std::cout << "\n" << chat_packet.to_string() << std::endl;
+    std::cout << chat_packet.to_string() << std::endl;
     
-    // 2. Message d'information protocole
     LPTF::LPTF_Packet info_packet(LPTF::MessageType::PROTOCOL_INFO);
     info_packet.set_string("protocol", "LPTF");
     info_packet.set_uint8("version", 1);
     std::cout << info_packet.to_string() << std::endl;
     
-    // 3. Message de ping
     LPTF::LPTF_Packet ping_packet(LPTF::MessageType::PING);
     ping_packet.set_uint64("timestamp", 1690123456789ULL);
     ping_packet.add_flag(LPTF::PacketFlags::REQUIRES_ACK);
     std::cout << ping_packet.to_string() << std::endl;
     
-    // Test de sérialisation/désérialisation
     std::vector<uint8_t> serialized = chat_packet.serialize();
-    std::cout << "Taille sérialisée: " << serialized.size() << " bytes" << std::endl;
+    std::cout << "Serialized size: " << serialized.size() << " bytes" << std::endl;
     
     LPTF::LPTF_Packet deserialized;
     if (deserialized.deserialize(serialized)) {
-        std::cout << "Désérialisation réussie!" << std::endl;
+        std::cout << "Deserialization successful!" << std::endl;
         
-        // Vérifier les données
         std::string username, message;
         uint64_t timestamp;
         if (LPTF::ChatMessage::parse(deserialized, username, message, timestamp)) {
-            std::cout << "Message parsé: " << username << " dit '" << message << "' à " << timestamp << std::endl;
+            std::cout << "Parsed: " << username << " says '" << message << "' at " << timestamp << std::endl;
         }
     }
     

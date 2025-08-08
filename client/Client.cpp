@@ -3,24 +3,24 @@
 #include <thread>
 #include <chrono>
 
-// Constructeur par défaut
+
 Client::Client() 
     : socket_(nullptr), server_ip_("127.0.0.1"), server_port_(8080), is_connected_(false) {
 }
 
-// Constructeur paramétré
+
 Client::Client(const std::string& server_ip, int server_port)
     : socket_(nullptr), server_ip_(server_ip), server_port_(server_port), is_connected_(false) {
     socket_ = std::make_unique<LPTF_Socket>(server_ip_, server_port_, false);
 }
 
-// Constructeur de copie
+
 Client::Client(const Client& other) 
     : socket_(nullptr), server_ip_(""), server_port_(0), is_connected_(false) {
     copy_from(other);
 }
 
-// Opérateur d'assignation
+
 Client& Client::operator=(const Client& other) {
     if (this != &other) {
         disconnect();
@@ -29,7 +29,7 @@ Client& Client::operator=(const Client& other) {
     return *this;
 }
 
-// Constructeur de move
+
 Client::Client(Client&& other) noexcept 
     : socket_(nullptr), server_ip_(""), server_port_(0), is_connected_(false) {
     move_from(std::move(other));
